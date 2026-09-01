@@ -1,0 +1,1 @@
+s= reads"p"i=0o=""define get(c){	global i	if(s[i]!=c) return 0	i=i+1	return 1}define get(){	global i	c=s[i]	i=i+1	c}

@@ -1,0 +1,133 @@
+<html>
+<!--眉入-->
+<head>
+<meta charset="UTF-8">
+<title>cipher</title>
+<style type="text/css">
+<!--
+body { 
+	background-color: White;
+	color: #404066;
+	margin-right: 48px;
+	margin-left:   48px;
+}
+-->
+</style>
+<body>
+<h1>プログラミング言語 Cipher</h1>
+
+Cipherのエッセンスとは：<p>
+
+<ul>
+<li>数学に近付けることにより強力な記述力を持った文法をもち、それがなじみのあるC言語に似た文法と両立
+<li>健全で強力なマクロ、lispのマクロ能力とC言語風の文法の両立
+<li>無名の関数を使った抽象化
+<li>ポインタや参照をなくする事により危険な副作用によるバグを低減
+<li>手続き型言語が直列度を最大化する記述を強要するのに対して、Cipherは並列度を最大化する記述をencourageする
+</ul>
+
+あんまりそう見えないだろうけど、
+作っている私の気持ちとしてはCの後継言語を作る事が目標です。
+Cをよく知っている人は分かっている通り、C言語がマシン語に対して提供する抽象化層は意外と薄い物です。CipherはそのCからもう一段だけ抽象化を提供することを目的とします。その抽象化とはメモリ管理の抽象化とプログラム自体と関数を第一級データとする事、そして継続の提供です。<p>
+
+まだ達成されていないけど、目標としては：
+<ul>
+<li>オブジェクト指向、パッケージシステムなどの機能はプログラマが自由に変更できる事（プログラム可能なプログラミング言語である事。パーサやリファクタリングエディタ自体もcipherで書かれていて変更できる事）
+<li>プログラムを読む/書くプログラムが書きやすい言語である事
+<li>第一の実装はインタープリタであるが、コンパイル可能な言語仕様である事
+</ul>
+
+<!--06.12.2-->
+
+
+<a href="cipher.bin">cipherバイナリ(MacOS 8 or more)</a>：なにが起きるか保証できないけど。<p>
+
+<a href="sample.html">cipherプログラムの例</a><p>
+
+<a href="lang.html">cipherの文法と、言語の特徴そして設計目標</a>
+（'03年頃に書いたものだから少し変わっちゃったところもある。）<p>
+
+<a href="http://www.google.com/search?client=safari&rls=ja-jp&q=site:homepage3.nifty.com+cipher+mogami+diary" target="_blank">cipherについてのT.M.の日記をgoogle検索</a><p>
+
+
+<h2>ソースコード</h2>
+
+<dl>
+<dt><a href="app.cp">app.cp</a></dt>
+	<dd>イベントループとイベントの分岐とI/O。
+	言語そのものとは関係ない。</dd>
+
+<dt><a href="appSpeci.c">appSpeci.c</a></dt>
+	<dd>ターミナルみたいなもの。イベントハンドラが入っている。</dd>
+
+<dt><a href="app.h">app.h</a></dt>
+	<dd>app.cとappSpeci.cの共通ヘッダ。
+	ターミナルの動作やOS依存の定数などが入る</dd>
+
+<dt><a href="tokenizer.c">tokenizer.c</a></dt>
+	<dd>手書きのトークナイザ</dd>
+
+<dt><a href="parser.c">parser.c</a></dt>
+	<dd>手書きの再帰降下パーサ。出力は構文木。</dd>
+
+<dt><a href="eval.c">eval.c</a>,
+<a href="eval.h">eval.h</a></dt>
+	<dd>評価器。構文木を実行するタイプ。</dd>
+
+<dt><a href="ciph.h">ciph.h</a></dt>
+	<dd>全体で使われるデータ構造と関数を定義</dd>
+
+<dt><a href="value.c">value.c</a>,
+<a href="value.h">value.h</a></dt>
+	<dd>データ構造の生成と破壊、コピーと四則演算</dd>
+
+<dt><a href="lib.c">lib.c</a></dt>
+	<dd>ライブラリ関数群</dd>
+
+<dt><a href="list.c">list.c</a>,
+<a href="list.h">list.h</a></dt>
+	<dd>リスト操作関数群</dd>
+
+<dt><a href="vector.c">vector.c</a>,
+<a href="vector.h">vector.h</a></dt>
+	<dd>集合型（リスト、配列、double配列）に対する操作関数群</dd>
+</dl>
+
+現状の実装はMacOS 8(classic)のアプリになっていて、
+シェルと言語が一つのバイナリになっています。
+しかし、言語仕様自体はシェルとは関係ありません。
+シェルからインタプリタへはinterpret(char* str)でインタープリタからシェルへはmyPrintf(fmt, ...)という非常に細いインターフェイスでつながっているのみです。<p>
+
+拡張子は.cですが、何となくC++です。
+クラスなどC++らしい機能は使っていません。
+コンパイラはCodeWarrior 9です。<p>
+
+<hr>
+
+<center>
+最上　嗣生<br>
+| <a href="http://homepage3.nifty.com/mogami/index.html">
+	Home</a> | <br>
+
+e-mailはmogami@brain.riken.jpヘ<p>
+</center>
+
+<script type="text/javascript">
+<!--
+xx = escape(document.referrer);
+yy = "";
+for (i = 0; i < xx.length; i++) {
+    zz = xx.charAt(i);
+    yy += (zz == "+") ? "%2B" : zz;
+}
+document.write('<IMG WIDTH=1 HEIGHT=1 ');
+document.write('SRC="http://hpcgi3.nifty.com/mogami/wwwcount.cgi');
+document.write('?hide+hoge.gif+ref+', yy, '" ALT=" ">');
+// --> 
+</script>
+<noscript>
+<img width=1 height=1 src="http://hpcgi3.nifty.com/mogami/wwwcount.cgi?hide+hoge.gif" ALT=" ">
+</noscript>
+
+</body>
+</html>

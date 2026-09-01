@@ -1,0 +1,1 @@
+typedef difadd(dif x, dif y) = dif(x+y)mul(dif(x,dx), dif(y,dy)) = diff(x*y, dx*y+x*dy) sin(dif(x,dx)) = dif( sin(x), cos(x)*dx )cos(dif(x,dx)) = dif( cos(x), -sin(x)*dx )pow(dif(x,dx), a) = dif(x^a, a*x^(a-1)*dx)

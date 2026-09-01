@@ -1,0 +1,214 @@
+(define new-env
+	(lambda (formals actuals env)
+		(cond
+			((null? formals) env)
+			((symbol? formals) (cons (cons formals actuals) env))
+			(else
+				(cons (cons (car formals) (car actuals))
+					(new-env (car formals) (car actuals) env))))))
+;
+;
+(define lookup
+	(lambda (var env)
+		(cdr (assq var env))))
+;
+(define assign
+	(lambda (var val env)
+		(set-cdr! (assq var env) val)))
+
+;
+(define exec 
+	(lamda (exp env)
+		(cond
+			((symbol? exp) (lookup exp env)) 
+			((pair? exp)
+				(case (car exp)
+					((quote) (cadr exp))
+					((lambda)
+						(lambda vals
+							(let ((env (new-env (cadr exp) vals env)))
+								(let loop ((exps (caddr exp)))
+									(if (null? (cdr exps))
+										(exec (car exps) env)
+										(loop (cdr exps))))))))
+					((if)
+						(if (exec (cadr exp) env)
+							(exec (caddr exp) env)
+							(exec (cadddr exp) env)))
+					((set!)
+						(assign (cadr exp)
+									(exec (caddr exp) env)
+									env))
+					(else
+						(apply (exec(car exp) env)
+									(map (lambda(x) (exec x env))
+												(cdr exp))))))
+				(else exp))))
+
+
+define {exec 
+	lamda {{exp, env}
+		cond {
+			symbol?(exp), {lookup(exp, env)}
+			pair?(exp)
+				{case {first exp
+					'quote, {cadr exp}
+					'lambda,{
+						lambda( vals, {
+								let(env, new_env(second exp, vals, env)
+									let(loop, exps, caddr exp,
+										if (null?(cdr exps))
+											exec(car exps, env)
+										else loop(cdr exps)}
+					'if,{
+
+結論
+Ｓ式の替わりに、演算子の前置と普通のリストを採用しても括弧の数は少し減り、見た目がちょっと普通になるが、それほどではない。
+
+さらにcipher風を徹底すると
+define new_env(formals, actuals, env){
+	new_env={formals, actuals} 
+	append(new_env, env)
+}
+
+define lookup(var, env){
+	if( phai(env) ) return null
+	l=first(env)
+	n=find(var, l[0])
+	if( !phai(n)) return l[1][n[1]]
+	return lookup(var, rest(env))
+}
+
+define assign(var val env){
+	l=first(env)
+	n=find(var, l[0])
+	if(!phai(n)) env[0][1][n[1]]= val
+}
+
+ここでのl=first(env)のような書き方は、要するに面倒なインデキシングに名前を付けたものと言える。ここでコピーによる性能低下が発生してしまう。これまでの考えではこのようなときはlの替わりにenv[0]とかと書くことによってそれを避けるべしということであった。しかし常にそれを要求するのは趣味が悪いのではないか？まあ将来の検討課題にしよう。
+しかし、代入に対してコピーというのをやめると、環状のリファレンスが発生してreference countingでは対処できなくなる。
+a[1] = a
+
+
+	l=eval(rest(exp))	
+	'apply,{
+		l[0] rest(l)			
+	'assq,{
+		xxx			
+	'car, {
+		first l[0] }
+	'cdr, {
+		rest l[0]}
+	'cadr, {
+		first rest l[0]}
+	'cons,{
+		append(l[0], l[1]) }
+	'eq,{
+		(l[0]==l[1]) }
+	'list,{
+		l }
+	'map, {	
+		map(first l, rest l) }
+	'null?,{
+	'pair?,{
+	'set-cadr,{
+	'symbol?,{
+
+
+		
+define exec(exp, env){ 
+	if(isSymbol(exp)) {return lookup(exp, env)}
+	if(not islist exp) {return exp}
+	case {exp[0]
+		'quote, {return exp[1]}
+		'lambda,{
+			define f(vals) {
+				env=new_env(exp[1], vals, env)
+				exec_serially(rest rest exp, env)
+				takefirst(env)}
+			return f
+		}
+		'if,{
+			if(exec(exp[1],env)) {exec(exp[2],env)} else {exec(exp[3],env)} }
+		'set,{
+			assign(exp[1], exec(exp[2],env), env) }
+
+		
+		else,{
+			exec(exp[0],env) exec(rest exp, env) }
+	}
+}
+
+
+また、cipherではset-cdr!で循環リストを作ることはできない。
+
+cipherでは行儀の悪いlistは存在しない。
+
+例えばcipherではcdrが速いことは意図されていない。lispインタープリタなどを書いていると方向性を間違えかねない。->restをわざと遅くしたまま進む。
+
+ここでは、まだ、無限エクステントは実装されていない。無限エクステントを実装するには数字をポインタ代わりにするのが結局いちばん簡単な方法であろう。
+
+
+cipher自身のインタプリタ
+define exec(list exp, env){
+	exec(exp[0], env)
+	exec(rest(exp), env)
+}
+
+define eval(exp, env){
+	args=opr exp
+	switch { op exp
+		'define, {function_define(args)}
+		'if,			{if(args[1]) {args[2]} else {args[3]} }
+		'while,  {eval_while(args)}
+		'return,{ 'return eval(args)}
+		'break,	{ 'break eval(args) }
+		'assign,{ l_eval args[0]=eval args[1] }
+		'typedef,{ type_define(args)}
+		else r_eval arg[0]
+	}
+}
+
+define eval(exp, env){
+	args=opr exp
+	op=op exp
+	if(op== 'define) 		function_define(args)
+	else if(op=='if)		   { if(args[0]) args[1] else args[2] }
+	else if(op=='while)   eval_while(args)
+	else if(op=='return)  'return eval(args)
+	else if(op=='break)		'break eval(args) 
+	else if(op=='assign)	l_eval args[0]=eval args[1] 
+	else if(op=='typedef) type_define(args)
+	else if(op==else) 			r_eval arg[0]
+}
+
+ToDo
+closureをschemeに実装する。
+普通はlambdaは現在の評価環境以下のレベルでしか使われないので、それならば評価環境に番号を与えて数字をポインタ代わりにする。
+第二の考えはさしあたりは現在のコールシーケンスのなかで変数を評価すること。これならclosureでなくともよい。
+
+
+ToDo
+reference count
+変えるなら、まずは加減乗除から導入。
+一方reference countを入れずにweak referencingで済ませるという考えもあるが、weak referencingをしていたら結局referenceカウントと同じくらいパフォーマンスに効く。lambda風バインドも同じである。
+絶対に必要な訳ではないかも知れないことと、パフォーマンス上の懸念から何度も導入すべきか悩んだが、とにかく現状ではメモリ管理に頭を使いすぎる。これは実験実装なのだからメモリ管理に頭を使わなくて良いreference count方式にすべきだ。
+
+cipherのclosureの
+現在の実装はcall sequenceの環境の全てをコピーしてしまう。
+これでは効率が悪すぎる。
+（Lambda(x,hoge)が導入されればコピーはされないけど。）
+これについては、returnの際に使っている変数をスキャンしてencloseするしかない。（lexical scopingなのだから、evalの前で静的に解決する手もある。）
+
+indexとdotを統合する。
+で、とりあえずdotはind quoteを生成するようにする。
+
+printについてどんなtypeでもプリントできるように。
+
+cipherにdefine-syntaxを実装せよ
+（簡単に言えば引数にclosureを取り、引数が呼び出し前にevalされない関数。
+しかもargが使用されたときには、変数としてevalされた後に、もう一度evalが入る。）
+とりあえずは新規のargbind無しで作ればよい。
+
+
+
